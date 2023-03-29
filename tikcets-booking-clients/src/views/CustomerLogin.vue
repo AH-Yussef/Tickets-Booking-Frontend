@@ -1,0 +1,119 @@
+<template>
+  <div class="login">
+    <div class="title">Welcome back !</div>
+    <Form ref="customer-login-form" :model="formData" :rules="rules" class="form">
+      <FormItem prop="email">
+        <Input type="text" v-model="formData.email" placeholder="Email">
+          <Icon type="ios-person-outline" slot="prepend"></Icon>
+        </Input>
+      </FormItem>
+      <FormItem prop="password">
+        <Input
+          type="password"
+          v-model="formData.password"
+          placeholder="Password"
+        >
+          <Icon type="ios-lock-outline" slot="prepend"></Icon>
+        </Input>
+      </FormItem>
+      <FormItem align="center">
+        <Button type="primary" @click="handleSubmit()"> Sign in </Button>
+      </FormItem>
+      <FormItem align="center">
+        <div class="sign-up">
+          <span style="margin-right: 0.3rem">don't have an account?</span>
+          <router-link to="/customer-signup">Sign up</router-link>
+        </div>
+      </FormItem>
+    </Form>
+  </div>
+</template>
+
+<script>
+import axios from "axios";
+
+export default {
+  data() {
+    return {
+      formData: {
+        email: "",
+        password: "",
+      },
+      rules: {
+        email: [
+          {
+            required: true,
+            message: "Please fill in the email",
+            trigger: "blur",
+          },
+        ],
+        password: [
+          {
+            required: true,
+            message: "Please fill in the password.",
+            trigger: "blur",
+          },
+        ],
+      },
+    };
+  },
+  methods: {
+    handleSubmit() {
+      this.$refs["customer-login-form"].validate((valid) => {
+        if (valid) {
+          axios({
+            method: "post",
+            url: "http://localhost:8888/api/v1/Customer/AuthUser",
+            data: {
+              email: this.formData.email,
+              password: this.formData.password,
+            },
+          })
+            .then((response) => {
+              const token = response.data.model.token;
+              localStorage.setItem("token_customer", token);
+              localStorage.setItem("customer_id", this.formData.email);
+              this.$router.push("/");
+              this.handleReset();
+            })
+            .catch(() => {
+              this.$Message.error({
+                content:
+                  "Email or Password is wrong",
+                duration: 20,
+                closable: true,
+              });
+                this.handleReset();
+            });
+        } else {
+          this.$Message.error("Please Enter all fields!");
+        }
+      });
+    },
+    handleReset() {
+      this.$refs["customer-login-form"].resetFields();
+    },
+  },
+};
+</script>
+
+<style scoped>
+.login {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.title {
+  margin-bottom: 1.5rem;
+  font-size: x-large;
+  font-weight: bold;
+}
+.form {
+  width: 33%;
+}
+.sign-up {
+  font-size: 0.85rem;
+}
+</style>
